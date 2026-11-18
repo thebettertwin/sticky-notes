@@ -7,10 +7,11 @@ interface IconButtonProps
   extends Omit<ComponentProps<typeof Button>, "children" | "aria-label"> {
   label: string;
   icon: Icon;
-  iconSize?: number;
+  /** Any CSS length, e.g. "1.5rem" */
+  iconSize?: string;
 }
 
-function IconButton({ label, icon: IconComponent, iconSize = 24, className, ...props }: IconButtonProps) {
+function IconButton({ label, icon: IconComponent, iconSize = "1.5rem", className, ...props }: IconButtonProps) {
   return (
     <Button
       aria-label={label}

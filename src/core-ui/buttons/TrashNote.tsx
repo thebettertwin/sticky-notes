@@ -15,7 +15,7 @@ function TrashNote({ isActive, ref }: TrashNoteProps) {
       className={`trash-note${isActive ? " is-over" : ""}`}
       title="Drag a note here to delete it"
     >
-      <TrashIcon size={28} weight={isActive ? "fill" : "regular"} aria-hidden="true" />
+      <TrashIcon size="1.75rem" weight={isActive ? "fill" : "regular"} aria-hidden="true" />
     </div>
   );
 }
