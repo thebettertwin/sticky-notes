@@ -1,4 +1,15 @@
 .notes-board {
     position: relative;
     flex: 1;
+    overflow: hidden;
+    touch-action: none;
+}
+
+.notes-board.is-panning {
+    cursor: grabbing;
+}
+
+
+.notes-board__world {
+    position: absolute;
 }

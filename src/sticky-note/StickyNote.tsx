@@ -9,7 +9,7 @@ import {
   type PointerEvent,
 } from "react";
 import type { ClientPoint } from "../core-ui/geometry";
-import { keepInsideBoard, type Note } from "./note";
+import type { Note } from "./note";
 import "./StickyNote.css";
 
 // Callbacks take the note's id so the parent can pass one stable function to every note,
@@ -70,19 +70,11 @@ function StickyNote({
 
   const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {
     const offset = grabOffset.current;
-    const board = noteRef.current?.offsetParent;
-    if (!offset || !board) return;
-    const boardRect = board.getBoundingClientRect();
-    const { x, y } = keepInsideBoard(
-      {
-        x: e.clientX - boardRect.left - offset.x,
-        y: e.clientY - boardRect.top - offset.y,
-        width: note.width,
-        height: note.height,
-      },
-      board.clientWidth,
-    );
-    onMove(note.id, x, y, e);
+    // The board's world layer: its position already includes the current pan
+    const world = noteRef.current?.offsetParent;
+    if (!offset || !world) return;
+    const worldRect = world.getBoundingClientRect();
+    onMove(note.id, e.clientX - worldRect.left - offset.x, e.clientY - worldRect.top - offset.y, e);
   };
 
   const endDrag = (pointer: ClientPoint | null) => {
@@ -121,8 +113,6 @@ function StickyNote({
           transform: `translate(${note.x}px, ${note.y}px)`,
           width: note.width,
           height: note.height,
-          // Stops the browser's resize grip from dragging the note past the board's right edge
-          maxWidth: `calc(100% - ${note.x}px)`,
           "--note-colour": note.colour,
         } as CSSProperties
       }

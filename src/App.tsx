@@ -2,6 +2,7 @@ import { useCallback, useState, type MouseEvent } from "react";
 import "./App.css";
 import type { ClientPoint } from "./core-ui/geometry";
 import NotesBoard from "./notes-board/NotesBoard";
+import { useBoardPan } from "./notes-board/useBoardPan";
 import NotesToolbar from "./notes-toolbar/NotesToolbar";
 import { cascadeRect, type Note, type NoteRect } from "./sticky-note/note";
 import { NOTE_COLOURS } from "./sticky-note/noteColours";
@@ -10,6 +11,7 @@ import { useTrashZone } from "./trash-note/useTrashZone";
 
 function App() {
   const { notes, addNote, updateNote, removeNote, bringToFront } = useNotes();
+  const { pan, panBy } = useBoardPan();
   const { trashRef, isOverTrash, isOver: isPointerOverTrash, trackPointer, stopTracking } =
     useTrashZone();
 
@@ -29,7 +31,9 @@ function App() {
     // detail is 0 for clicks triggered by Enter/Space: there's no cursor to place with,
     // so put the note at the next cascade position instead
     if (e.detail === 0) {
-      createNote(cascadeRect(notes.length));
+      // Relative to the visible part of the board, wherever it's panned to
+      const rect = cascadeRect(notes.length);
+      createNote({ ...rect, x: rect.x + pan.x, y: rect.y + pan.y });
       return;
     }
     setIsPlacing((placing) => !placing);
@@ -103,6 +107,8 @@ function App() {
       <NotesBoard
         notes={notes}
         activeNoteId={activeNoteId}
+        pan={pan}
+        onPan={panBy}
         isPlacing={isPlacing}
         placementColour={selectedColour}
         onPlace={handlePlace}

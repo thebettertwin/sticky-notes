@@ -1,28 +1,26 @@
 import { useEffect, useEffectEvent, useState, type CSSProperties, type PointerEvent } from "react";
 import type { Point } from "../core-ui/geometry";
-import { DEFAULT_NOTE_SIZE, keepInsideBoard, type NoteRect } from "../sticky-note/note";
+import { DEFAULT_NOTE_SIZE, type NoteRect } from "../sticky-note/note";
 import { rectFromPoints } from "./rectFromPoints";
 import "./PlacementLayer.css";
 
 interface PlacementLayerProps {
+  /** Board coordinate at the viewport's top-left, to convert placed rects into board space */
+  pan: Point;
   colour: string;
   onPlace: (rect: NoteRect) => void;
   onCancel: () => void;
 }
 
-function toBoardPoint(e: PointerEvent<HTMLElement>): Point {
+/** Pointer position relative to the layer, which covers the visible part of the board */
+function toViewportPoint(e: PointerEvent<HTMLElement>): Point {
   const rect = e.currentTarget.getBoundingClientRect();
-  return {
-    x: Math.max(0, e.clientX - rect.left),
-    y: Math.max(0, e.clientY - rect.top),
-  };
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
 }
 
-function PlacementLayer({ colour, onPlace, onCancel }: PlacementLayerProps) {
+function PlacementLayer({ pan, colour, onPlace, onCancel }: PlacementLayerProps) {
   const [pointer, setPointer] = useState<Point | null>(null);
   const [dragStart, setDragStart] = useState<Point | null>(null);
-  // The layer covers the board, so its width is the board's width
-  const [boardWidth, setBoardWidth] = useState(0);
 
   const cancel = useEffectEvent(onCancel);
   useEffect(() => {
@@ -33,16 +31,12 @@ function PlacementLayer({ colour, onPlace, onCancel }: PlacementLayerProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const trackPointer = (e: PointerEvent<HTMLDivElement>) => {
-    setPointer(toBoardPoint(e));
-    setBoardWidth(e.currentTarget.clientWidth);
-  };
-
   const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    setBoardWidth(e.currentTarget.clientWidth);
+    // Stops the board underneath from starting a pan
+    e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
-    const point = toBoardPoint(e);
+    const point = toViewportPoint(e);
     setDragStart(point);
     setPointer(point);
   };
@@ -50,19 +44,20 @@ function PlacementLayer({ colour, onPlace, onCancel }: PlacementLayerProps) {
   const handlePointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (!dragStart) return;
     setDragStart(null);
-    onPlace(keepInsideBoard(rectFromPoints(dragStart, toBoardPoint(e)), e.currentTarget.clientWidth));
+    const rect = rectFromPoints(dragStart, toViewportPoint(e));
+    onPlace({ ...rect, x: rect.x + pan.x, y: rect.y + pan.y });
   };
 
-  const unconstrainedGhost: NoteRect | null = dragStart && pointer
+  // In viewport coordinates, since the layer itself doesn't pan
+  const ghost: NoteRect | null = dragStart && pointer
     ? rectFromPoints(dragStart, pointer)
     : pointer && { ...pointer, ...DEFAULT_NOTE_SIZE };
-  const ghost = unconstrainedGhost && keepInsideBoard(unconstrainedGhost, boardWidth);
 
   return (
     <div
       className="placement-layer"
       onPointerDown={handlePointerDown}
-      onPointerMove={trackPointer}
+      onPointerMove={(e) => setPointer(toViewportPoint(e))}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => setDragStart(null)}
       onPointerLeave={() => {
