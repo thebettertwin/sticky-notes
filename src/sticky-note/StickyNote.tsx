@@ -1,13 +1,6 @@
 import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import type { Note } from "./note";
 import "./StickyNote.css";
-
-export interface Note {
-  id: string;
-  text: string;
-  x: number;
-  y: number;
-  colour: string;
-}
 
 export interface Pointer {
   clientX: number;
@@ -61,7 +54,14 @@ function StickyNote({ note, onChange, onMove, onDragEnd, onActivate, isActive = 
       className={["sticky-note", isDragging && "is-dragging", isActive && "is-active"]
         .filter(Boolean)
         .join(" ")}
-      style={{ transform: `translate(${note.x}px, ${note.y}px)`, "--note-colour": note.colour } as CSSProperties}
+      style={
+        {
+          transform: `translate(${note.x}px, ${note.y}px)`,
+          width: note.width,
+          height: note.height,
+          "--note-colour": note.colour,
+        } as CSSProperties
+      }
       onPointerDown={onActivate}
       onFocus={onActivate}
     >
@@ -78,7 +78,7 @@ function StickyNote({ note, onChange, onMove, onDragEnd, onActivate, isActive = 
         placeholder="Write your note here..."
         value={note.text}
         onChange={(e) => onChange(e.target.value)}
-        autoFocus
+        autoFocus={isActive}
       />
     </div>
   );

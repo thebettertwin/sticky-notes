@@ -5,7 +5,9 @@ import IconButton from "./core-ui/buttons/IconButton";
 import TrashNote from "./trash-note/TrashNote";
 import Toolbar from "./core-ui/toolbar/Toolbar";
 import ToolbarDock from "./core-ui/toolbar/ToolbarDock";
-import StickyNote, { type Note, type Pointer } from "./sticky-note/StickyNote";
+import StickyNote, { type Pointer } from "./sticky-note/StickyNote";
+import { DEFAULT_NOTE_SIZE, type Note } from "./sticky-note/note";
+import { usePersistedNotes } from "./sticky-note/usePersistedNotes";
 import { NOTE_COLOURS } from "./sticky-note/noteColours";
 import ColourPicker from "./colour-picker/ColourPicker";
 
@@ -14,7 +16,7 @@ const NEW_NOTE_OFFSET = 24;
 const NEW_NOTE_CASCADE = 10;
 
 function App() {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = usePersistedNotes();
   const [selectedColour, setSelectedColour] = useState(NOTE_COLOURS[0]);
   const [showColours, setShowColours] = useState(false);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
@@ -43,7 +45,10 @@ function App() {
     setNotes((prev) => {
       const step = (prev.length % NEW_NOTE_CASCADE) + 1;
       const offset = step * NEW_NOTE_OFFSET;
-      return [...prev, { id, text: "", x: offset, y: offset, colour: selectedColour }];
+      return [
+        ...prev,
+        { id, text: "", x: offset, y: offset, ...DEFAULT_NOTE_SIZE, colour: selectedColour },
+      ];
     });
   };
 
