@@ -1,8 +1,19 @@
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs);
+    aspect-ratio: 1;
+}
+
 .icon-button:hover {
     cursor: pointer;
 }
 
-/* Hover icon swap: both icons are rendered, CSS decides which one shows */
+.icon-button__icon {
+    display: block;
+}
+
 .icon-button__icon--hover {
     display: none;
 }
@@ -15,7 +26,6 @@
     display: block;
 }
 
-/* Only on devices that really hover, so a tap on touchscreens doesn't leave it stuck */
 @media (hover: hover) {
     .icon-button.has-hover-icon:hover .icon-button__icon {
         display: none;

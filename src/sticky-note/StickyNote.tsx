@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent } from "react";
+import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import "./StickyNote.css";
 
 export interface Note {
@@ -6,6 +6,7 @@ export interface Note {
   text: string;
   x: number;
   y: number;
+  colour: string;
 }
 
 export interface Pointer {
@@ -18,9 +19,11 @@ interface StickyNoteProps {
   onChange: (text: string) => void;
   onMove: (x: number, y: number, pointer: Pointer) => void;
   onDragEnd: (pointer: Pointer | null) => void;
+  onActivate: () => void;
+  isActive?: boolean;
 }
 
-function StickyNote({ note, onChange, onMove, onDragEnd }: StickyNoteProps) {
+function StickyNote({ note, onChange, onMove, onDragEnd, onActivate, isActive = false }: StickyNoteProps) {
   const noteRef = useRef<HTMLDivElement>(null);
   const grabOffset = useRef<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -55,8 +58,12 @@ function StickyNote({ note, onChange, onMove, onDragEnd }: StickyNoteProps) {
   return (
     <div
       ref={noteRef}
-      className={`sticky-note${isDragging ? " is-dragging" : ""}`}
-      style={{ transform: `translate(${note.x}px, ${note.y}px)` }}
+      className={["sticky-note", isDragging && "is-dragging", isActive && "is-active"]
+        .filter(Boolean)
+        .join(" ")}
+      style={{ transform: `translate(${note.x}px, ${note.y}px)`, "--note-colour": note.colour } as CSSProperties}
+      onPointerDown={onActivate}
+      onFocus={onActivate}
     >
       <div
         className="sticky-note__handle"

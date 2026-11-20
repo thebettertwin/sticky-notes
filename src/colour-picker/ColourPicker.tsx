@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import './ColourPicker.css';
 
 interface ColourPickerProps {
@@ -12,8 +13,10 @@ function ColourPicker({ swatches, selectedColour, onSelectColour }: ColourPicker
             {swatches.map((colour) => (
                 <button
                     key={colour}
+                    type="button"
                     className={`colour-swatch${selectedColour === colour ? " selected" : ""}`}
-                    style={{ backgroundColor: colour }}
+                    style={{ "--swatch-colour": colour } as CSSProperties}
+                    aria-pressed={selectedColour === colour}
                     onClick={() => onSelectColour(colour)}
                     aria-label={`Select colour ${colour}`}
                 />

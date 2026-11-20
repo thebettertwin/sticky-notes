@@ -25,6 +25,7 @@
   /* Colours: toolbar and controls */
   --color-surface: #f0f0f0;
   --color-icon: #555;
+  --color-hover-overlay: rgba(0, 0, 0, 0.06);
   --color-danger: #d32f2f;
   --color-danger-bg: #fde2e2;
 

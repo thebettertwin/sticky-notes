@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import { NoteBlankIcon, PlusIcon } from "@phosphor-icons/react";
+import { NoteBlankIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import "./App.css";
 import IconButton from "./core-ui/buttons/IconButton";
 import TrashNote from "./trash-note/TrashNote";
 import Toolbar from "./core-ui/toolbar/Toolbar";
 import ToolbarDock from "./core-ui/toolbar/ToolbarDock";
 import StickyNote, { type Note, type Pointer } from "./sticky-note/StickyNote";
+import { NOTE_COLOURS } from "./sticky-note/noteColours";
 import ColourPicker from "./colour-picker/ColourPicker";
 
 
@@ -14,7 +15,9 @@ const NEW_NOTE_CASCADE = 10;
 
 function App() {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedColour, setSelectedColour] = useState(NOTE_COLOURS[0]);
   const [showColours, setShowColours] = useState(false);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const trashRef = useRef<HTMLDivElement>(null);
 
@@ -34,12 +37,29 @@ function App() {
   };
 
   const handleAddNote = () => {
+    const id = crypto.randomUUID();
     setShowColours(true);
+    setActiveNoteId(id);
     setNotes((prev) => {
       const step = (prev.length % NEW_NOTE_CASCADE) + 1;
       const offset = step * NEW_NOTE_OFFSET;
-      return [...prev, { id: crypto.randomUUID(), text: "", x: offset, y: offset }];
+      return [...prev, { id, text: "", x: offset, y: offset, colour: selectedColour }];
     });
+  };
+
+  const handleSelectColour = (colour: string) => {
+    setSelectedColour(colour);
+    if (activeNoteId) updateNote(activeNoteId, { colour });
+  };
+
+  const handleActivateNote = (note: Note) => {
+    setActiveNoteId(note.id);
+    setSelectedColour(note.colour);
+  };
+
+  const handleCloseColours = () => {
+    setShowColours(false);
+    setActiveNoteId(null);
   };
 
   const handleNoteMove = (id: string, x: number, y: number, pointer: Pointer) => {
@@ -51,9 +71,10 @@ function App() {
     setIsOverTrash(false);
     if (pointer && isPointerOverTrash(pointer)) {
       setNotes((prev) => prev.filter((note) => note.id !== id));
+      if (id === activeNoteId) setActiveNoteId(null);
       return;
     }
-    // Move the dropped note to the end of the list so it renders on top of the others
+
     setNotes((prev) => {
       const dropped = prev.find((note) => note.id === id);
       return dropped ? [...prev.filter((note) => note.id !== id), dropped] : prev;
@@ -72,14 +93,27 @@ function App() {
               onChange={(text) => updateNote(note.id, { text })}
               onMove={(x, y, pointer) => handleNoteMove(note.id, x, y, pointer)}
               onDragEnd={(pointer) => handleNoteDragEnd(note.id, pointer)}
+              onActivate={() => handleActivateNote(note)}
+              isActive={note.id === activeNoteId}
             />
           ))}
         </div>
         <ToolbarDock>
           {showColours && (
-          <Toolbar aria-label="Note colour picker" size="sm">
-            <ColourPicker swatches={['#FFAFA3', '#FFE299', '#B3EFBD', '#A8DAFF', '#FFA8DB']} selectedColour="#FFAFA3" onSelectColour={() => {}} />
-          </Toolbar>
+            <Toolbar aria-label="Note colour picker" size="sm">
+              <ColourPicker
+                swatches={NOTE_COLOURS}
+                selectedColour={selectedColour}
+                onSelectColour={handleSelectColour}
+              />
+              <IconButton
+                className="toolbar-close"
+                label="Close colour picker"
+                icon={XIcon}
+                iconSize="1rem"
+                onClick={handleCloseColours}
+              />
+            </Toolbar>
           )}
           <Toolbar aria-label="Notes">
             <IconButton

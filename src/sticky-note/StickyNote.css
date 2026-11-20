@@ -6,7 +6,10 @@
     flex-direction: column;
     width: 12.5rem;
     height: 12.5rem;
-    background-color: var(--color-note-bg);
+    /* Size of the folded corner on the active note */
+    --note-fold-size: 1.5rem;
+
+    background-color: var(--note-colour, var(--color-note-bg));
     box-shadow: var(--shadow-md);
     resize: both;
     overflow: hidden;
@@ -44,4 +47,46 @@
 .sticky-note textarea:focus {
     outline: var(--border-width-focus) solid var(--color-note-focus);
     outline-offset: calc(var(--border-width-focus) * -1);
+}
+
+/* Active note: plain outline for browsers without corner-shape */
+.sticky-note.is-active {
+    outline: var(--border-width-focus) solid color-mix(in oklab, var(--note-colour), black 30%);
+    outline-offset: var(--border-width-focus);
+}
+
+/* Active note: folded top-right corner. corner-shape: bevel turns the rounded
+   corner into a straight diagonal cut, and the shadow follows the cut (unlike clip-path).
+   Not bottom-right, which holds the browser's resize grip. */
+@supports (corner-shape: bevel) {
+    .sticky-note {
+        corner-shape: bevel;
+        border-top-right-radius: 0;
+        transition: border-top-right-radius var(--duration-fast);
+    }
+
+    .sticky-note.is-active {
+        outline: none;
+        border-top-right-radius: var(--note-fold-size);
+    }
+
+    /* The folded-over flap: a darker triangle on the inside of the cut */
+    .sticky-note::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: var(--note-fold-size);
+        height: var(--note-fold-size);
+        background: color-mix(in oklab, var(--note-colour, var(--color-note-bg)), black 15%);
+        clip-path: polygon(0 0, 0 100%, 100% 100%);
+        pointer-events: none;
+        scale: 0;
+        transform-origin: top right;
+        transition: scale var(--duration-fast);
+    }
+
+    .sticky-note.is-active::after {
+        scale: 1;
+    }
 }
