@@ -28,15 +28,17 @@
   --color-on-primary: #fff;
 
   /* Colours: toolbar and controls */
-  /* 10% off the page background, darker in light mode and lighter in dark */
-  --color-surface: color-mix(in oklab, var(--color-bg), black 10%);
+  /* Light mode floats a white surface on the page, edged by a border and shadow;
+     dark mode lifts it off the background with a lighter fill instead */
+  --color-surface: #fff;
+  --color-surface-border: var(--color-border);
   --color-icon: #555;
   --color-hover-overlay: rgba(0, 0, 0, 0.06);
   --color-danger: #d32f2f;
   --color-danger-bg: #fde2e2;
 
   /* Shadows */
-  --shadow-sm: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
   --shadow-md: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.25);
 
@@ -84,6 +86,7 @@
     --color-accent-border: rgba(192, 132, 252, 0.5);
 
     --color-surface: color-mix(in oklab, var(--color-bg), white 15%);
+    --color-surface-border: transparent;
     --color-icon: #d1d5db;
     --color-hover-overlay: rgba(255, 255, 255, 0.08);
     --color-danger: #f87171;
