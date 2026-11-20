@@ -1,55 +1,45 @@
-import { useRef, useState } from "react";
-import { NoteBlankIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
+import { useCallback, useState, type MouseEvent } from "react";
 import "./App.css";
-import IconButton from "./core-ui/buttons/IconButton";
-import TrashNote from "./trash-note/TrashNote";
-import Toolbar from "./core-ui/toolbar/Toolbar";
-import ToolbarDock from "./core-ui/toolbar/ToolbarDock";
-import StickyNote, { type Pointer } from "./sticky-note/StickyNote";
-import { DEFAULT_NOTE_SIZE, type Note } from "./sticky-note/note";
-import { usePersistedNotes } from "./sticky-note/usePersistedNotes";
+import type { ClientPoint } from "./core-ui/geometry";
+import NotesBoard from "./notes-board/NotesBoard";
+import NotesToolbar from "./notes-toolbar/NotesToolbar";
+import { cascadeRect, type Note, type NoteRect } from "./sticky-note/note";
 import { NOTE_COLOURS } from "./sticky-note/noteColours";
-import ColourPicker from "./colour-picker/ColourPicker";
-
-
-const NEW_NOTE_OFFSET = 24;
-const NEW_NOTE_CASCADE = 10;
+import { useNotes } from "./sticky-note/useNotes";
+import { useTrashZone } from "./trash-note/useTrashZone";
 
 function App() {
-  const [notes, setNotes] = usePersistedNotes();
+  const { notes, addNote, updateNote, removeNote, bringToFront } = useNotes();
+  const { trashRef, isOverTrash, isOver: isPointerOverTrash, trackPointer, stopTracking } =
+    useTrashZone();
+
   const [selectedColour, setSelectedColour] = useState(NOTE_COLOURS[0]);
   const [showColours, setShowColours] = useState(false);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
-  const [isOverTrash, setIsOverTrash] = useState(false);
-  const trashRef = useRef<HTMLDivElement>(null);
+  const [isPlacing, setIsPlacing] = useState(false);
 
-  const isPointerOverTrash = ({ clientX, clientY }: Pointer) => {
-    const rect = trashRef.current?.getBoundingClientRect();
-    return (
-      !!rect &&
-      clientX >= rect.left &&
-      clientX <= rect.right &&
-      clientY >= rect.top &&
-      clientY <= rect.bottom
-    );
-  };
-
-  const updateNote = (id: string, changes: Partial<Note>) => {
-    setNotes((prev) => prev.map((note) => (note.id === id ? { ...note, ...changes } : note)));
-  };
-
-  const handleAddNote = () => {
+  const createNote = (rect: NoteRect) => {
     const id = crypto.randomUUID();
-    setShowColours(true);
+    addNote({ id, text: "", ...rect, colour: selectedColour });
     setActiveNoteId(id);
-    setNotes((prev) => {
-      const step = (prev.length % NEW_NOTE_CASCADE) + 1;
-      const offset = step * NEW_NOTE_OFFSET;
-      return [
-        ...prev,
-        { id, text: "", x: offset, y: offset, ...DEFAULT_NOTE_SIZE, colour: selectedColour },
-      ];
-    });
+    setShowColours(true);
+  };
+
+  const handleAddClick = (e: MouseEvent<HTMLButtonElement>) => {
+    // detail is 0 for clicks triggered by Enter/Space: there's no cursor to place with,
+    // so put the note at the next cascade position instead
+    if (e.detail === 0) {
+      createNote(cascadeRect(notes.length));
+      return;
+    }
+    setIsPlacing((placing) => !placing);
+    setShowColours(true);
+    setActiveNoteId(null);
+  };
+
+  const handlePlace = (rect: NoteRect) => {
+    setIsPlacing(false);
+    createNote(rect);
   };
 
   const handleSelectColour = (colour: string) => {
@@ -57,82 +47,76 @@ function App() {
     if (activeNoteId) updateNote(activeNoteId, { colour });
   };
 
-  const handleActivateNote = (note: Note) => {
-    setActiveNoteId(note.id);
-    setSelectedColour(note.colour);
-  };
-
   const handleCloseColours = () => {
     setShowColours(false);
     setActiveNoteId(null);
+    setIsPlacing(false);
   };
 
-  const handleNoteMove = (id: string, x: number, y: number, pointer: Pointer) => {
-    updateNote(id, { x, y });
-    setIsOverTrash(isPointerOverTrash(pointer));
-  };
+  // Note handlers are passed to every note and must stay stable for StickyNote's memo to work
+  const handleTextChange = useCallback(
+    (id: string, text: string) => updateNote(id, { text }),
+    [updateNote],
+  );
 
-  const handleNoteDragEnd = (id: string, pointer: Pointer | null) => {
-    setIsOverTrash(false);
-    if (pointer && isPointerOverTrash(pointer)) {
-      setNotes((prev) => prev.filter((note) => note.id !== id));
-      if (id === activeNoteId) setActiveNoteId(null);
-      return;
-    }
+  const handleResize = useCallback(
+    (id: string, width: number, height: number) => updateNote(id, { width, height }),
+    [updateNote],
+  );
 
-    setNotes((prev) => {
-      const dropped = prev.find((note) => note.id === id);
-      return dropped ? [...prev.filter((note) => note.id !== id), dropped] : prev;
-    });
-  };
+  const handleMove = useCallback(
+    (id: string, x: number, y: number, pointer: ClientPoint) => {
+      updateNote(id, { x, y });
+      trackPointer(pointer);
+    },
+    [updateNote, trackPointer],
+  );
+
+  const handleDragEnd = useCallback(
+    (id: string, pointer: ClientPoint | null) => {
+      stopTracking();
+      if (pointer && isPointerOverTrash(pointer)) {
+        removeNote(id);
+        setActiveNoteId((active) => (active === id ? null : active));
+      } else {
+        bringToFront(id);
+      }
+    },
+    [stopTracking, isPointerOverTrash, removeNote, bringToFront],
+  );
+
+  const handleActivate = useCallback((note: Note) => {
+    setActiveNoteId(note.id);
+    setSelectedColour(note.colour);
+  }, []);
 
   return (
-    <>
-      <section id="center">
-        <h1>Sticky Notes</h1>
-        <div className="notes-board">
-          {notes.map((note) => (
-            <StickyNote
-              key={note.id}
-              note={note}
-              onChange={(text) => updateNote(note.id, { text })}
-              onMove={(x, y, pointer) => handleNoteMove(note.id, x, y, pointer)}
-              onDragEnd={(pointer) => handleNoteDragEnd(note.id, pointer)}
-              onResize={(width, height) => updateNote(note.id, { width, height })}
-              onActivate={() => handleActivateNote(note)}
-              isActive={note.id === activeNoteId}
-            />
-          ))}
-        </div>
-        <ToolbarDock>
-          {showColours && (
-            <Toolbar aria-label="Note colour picker" size="sm">
-              <ColourPicker
-                swatches={NOTE_COLOURS}
-                selectedColour={selectedColour}
-                onSelectColour={handleSelectColour}
-              />
-              <IconButton
-                className="toolbar-close"
-                label="Close colour picker"
-                icon={XIcon}
-                iconSize="1rem"
-                onClick={handleCloseColours}
-              />
-            </Toolbar>
-          )}
-          <Toolbar aria-label="Notes">
-            <IconButton
-              label="Add sticky note"
-              icon={NoteBlankIcon}
-              hoverIcon={PlusIcon}
-              onClick={handleAddNote}
-            />
-            <TrashNote ref={trashRef} isActive={isOverTrash} />
-          </Toolbar>
-        </ToolbarDock>
-      </section>
-    </>
+    <section id="center">
+      <h1>Sticky Notes</h1>
+      <NotesBoard
+        notes={notes}
+        activeNoteId={activeNoteId}
+        isPlacing={isPlacing}
+        placementColour={selectedColour}
+        onPlace={handlePlace}
+        onCancelPlacement={() => setIsPlacing(false)}
+        onTextChange={handleTextChange}
+        onMove={handleMove}
+        onDragEnd={handleDragEnd}
+        onResize={handleResize}
+        onActivate={handleActivate}
+      />
+      <NotesToolbar
+        isPlacing={isPlacing}
+        onAddClick={handleAddClick}
+        showColours={showColours}
+        selectedColour={selectedColour}
+        onSelectColour={handleSelectColour}
+        onCloseColours={handleCloseColours}
+        trashRef={trashRef}
+        isOverTrash={isOverTrash}
+      />
+    </section>
   );
 }
 

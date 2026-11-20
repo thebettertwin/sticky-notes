@@ -46,7 +46,7 @@
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
 
-  /* Borders. Hairlines stay in px: a rem fraction can render blurry or uneven */
+  /* Borders */
   --border-width-hairline: 1px;
   --border-width-focus: 0.125rem;
 
@@ -58,6 +58,7 @@
   --font-size-note: 1rem;
 
   /* Layering */
+  --z-placement: 5;
   --z-toolbar: 10;
   --z-dragging: 1000;
 
