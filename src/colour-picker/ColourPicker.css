@@ -1,0 +1,14 @@
+.colour-picker {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.colour-swatch {
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: 2px solid transparent;
+}

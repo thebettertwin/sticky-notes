@@ -1,26 +1,16 @@
-import type { Ref } from "react";
-import { NoteBlankIcon } from "@phosphor-icons/react";
-import IconButton from "../buttons/IconButton";
-import TrashNote from "../buttons/TrashNote";
-import './Toolbar.css';
+import type { ComponentProps } from "react";
+import "./Toolbar.css";
 
-interface ToolbarProps {
-  onAddNote: () => void;
-  trashRef: Ref<HTMLDivElement>;
-  isTrashActive: boolean;
+interface ToolbarProps extends ComponentProps<"div"> {
+  /** Required so screen readers can tell toolbars apart, e.g. "Notes" or "Note colour" */
+  "aria-label": string;
+  size?: "md" | "sm";
 }
 
-function Toolbar({ onAddNote, trashRef, isTrashActive }: ToolbarProps) {
-  return (
-    <nav className="toolbar">
-      <IconButton
-        label="Add sticky note"
-        icon={NoteBlankIcon}
-        onClick={onAddNote}
-      />
-      <TrashNote ref={trashRef} isActive={isTrashActive} />
-    </nav>
-  );
+// A generic bar of controls. Where it sits on screen is up to its parent (see ToolbarDock).
+function Toolbar({ size = "md", className, ...props }: ToolbarProps) {
+  const classes = ["toolbar", `toolbar--${size}`, className].filter(Boolean).join(" ");
+  return <div role="toolbar" className={classes} {...props} />;
 }
 
 export default Toolbar;

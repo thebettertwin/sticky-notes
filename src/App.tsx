@@ -1,7 +1,12 @@
 import { useRef, useState } from "react";
+import { NoteBlankIcon, PlusIcon } from "@phosphor-icons/react";
 import "./App.css";
+import IconButton from "./core-ui/buttons/IconButton";
+import TrashNote from "./trash-note/TrashNote";
 import Toolbar from "./core-ui/toolbar/Toolbar";
-import StickyNote, { type Note, type Pointer } from "./StickyNote/StickyNote";
+import ToolbarDock from "./core-ui/toolbar/ToolbarDock";
+import StickyNote, { type Note, type Pointer } from "./sticky-note/StickyNote";
+import ColourPicker from "./colour-picker/ColourPicker";
 
 
 const NEW_NOTE_OFFSET = 24;
@@ -9,6 +14,7 @@ const NEW_NOTE_CASCADE = 10;
 
 function App() {
   const [notes, setNotes] = useState<Note[]>([]);
+  const [showColours, setShowColours] = useState(false);
   const [isOverTrash, setIsOverTrash] = useState(false);
   const trashRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +34,7 @@ function App() {
   };
 
   const handleAddNote = () => {
+    setShowColours(true);
     setNotes((prev) => {
       const step = (prev.length % NEW_NOTE_CASCADE) + 1;
       const offset = step * NEW_NOTE_OFFSET;
@@ -68,7 +75,22 @@ function App() {
             />
           ))}
         </div>
-        <Toolbar onAddNote={handleAddNote} trashRef={trashRef} isTrashActive={isOverTrash} />
+        <ToolbarDock>
+          {showColours && (
+          <Toolbar aria-label="Note colour picker" size="sm">
+            <ColourPicker swatches={['#FFAFA3', '#FFE299', '#B3EFBD', '#A8DAFF', '#FFA8DB']} selectedColour="#FFAFA3" onSelectColour={() => {}} />
+          </Toolbar>
+          )}
+          <Toolbar aria-label="Notes">
+            <IconButton
+              label="Add sticky note"
+              icon={NoteBlankIcon}
+              hoverIcon={PlusIcon}
+              onClick={handleAddNote}
+            />
+            <TrashNote ref={trashRef} isActive={isOverTrash} />
+          </Toolbar>
+        </ToolbarDock>
       </section>
     </>
   );

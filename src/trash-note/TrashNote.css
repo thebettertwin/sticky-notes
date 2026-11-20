@@ -1,0 +1,18 @@
+.trash-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-md);
+    color: var(--color-icon);
+    transition:
+        background-color var(--duration-fast),
+        color var(--duration-fast),
+        transform var(--duration-fast);
+}
+
+.trash-note.is-over {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+    transform: scale(1.15);
+}

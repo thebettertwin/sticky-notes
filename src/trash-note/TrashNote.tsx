@@ -1,5 +1,6 @@
 import type { Ref } from "react";
 import { TrashIcon } from "@phosphor-icons/react";
+import "./TrashNote.css";
 
 interface TrashNoteProps {
   isActive: boolean;

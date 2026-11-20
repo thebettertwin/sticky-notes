@@ -1,3 +1,27 @@
 .icon-button:hover {
     cursor: pointer;
 }
+
+/* Hover icon swap: both icons are rendered, CSS decides which one shows */
+.icon-button__icon--hover {
+    display: none;
+}
+
+.icon-button.has-hover-icon:focus-visible .icon-button__icon {
+    display: none;
+}
+
+.icon-button.has-hover-icon:focus-visible .icon-button__icon--hover {
+    display: block;
+}
+
+/* Only on devices that really hover, so a tap on touchscreens doesn't leave it stuck */
+@media (hover: hover) {
+    .icon-button.has-hover-icon:hover .icon-button__icon {
+        display: none;
+    }
+
+    .icon-button.has-hover-icon:hover .icon-button__icon--hover {
+        display: block;
+    }
+}

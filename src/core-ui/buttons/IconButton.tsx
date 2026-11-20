@@ -7,19 +7,42 @@ interface IconButtonProps
   extends Omit<ComponentProps<typeof Button>, "children" | "aria-label"> {
   label: string;
   icon: Icon;
-  /** Any CSS length, e.g. "1.5rem" */
+  /** Optional icon shown instead of `icon` on hover and keyboard focus */
+  hoverIcon?: Icon;
   iconSize?: string;
 }
 
-function IconButton({ label, icon: IconComponent, iconSize = "1.5rem", className, ...props }: IconButtonProps) {
+function IconButton({
+  label,
+  icon: IconComponent,
+  hoverIcon: HoverIconComponent,
+  iconSize = "1.5rem",
+  className,
+  ...props
+}: IconButtonProps) {
   return (
     <Button
       aria-label={label}
       title={label}
-      className={["icon-button", className].filter(Boolean).join(" ")}
+      className={["icon-button", HoverIconComponent && "has-hover-icon", className]
+        .filter(Boolean)
+        .join(" ")}
       {...props}
     >
-      <IconComponent size={iconSize} aria-hidden="true" focusable="false" />
+      <IconComponent
+        className="icon-button__icon"
+        size={iconSize}
+        aria-hidden="true"
+        focusable="false"
+      />
+      {HoverIconComponent && (
+        <HoverIconComponent
+          className="icon-button__icon icon-button__icon--hover"
+          size={iconSize}
+          aria-hidden="true"
+          focusable="false"
+        />
+      )}
     </Button>
   );
 }
