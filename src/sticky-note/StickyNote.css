@@ -2,6 +2,10 @@
     position: absolute;
     top: 0;
     left: 0;
+    /* Width/height from state then match the border box the ResizeObserver reports */
+    box-sizing: border-box;
+    min-width: 7.5rem;
+    min-height: 7.5rem;
     display: flex;
     flex-direction: column;
     /* Size of the folded corner on the active note */

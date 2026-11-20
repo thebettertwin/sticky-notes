@@ -98,6 +98,7 @@ function App() {
               onChange={(text) => updateNote(note.id, { text })}
               onMove={(x, y, pointer) => handleNoteMove(note.id, x, y, pointer)}
               onDragEnd={(pointer) => handleNoteDragEnd(note.id, pointer)}
+              onResize={(width, height) => updateNote(note.id, { width, height })}
               onActivate={() => handleActivateNote(note)}
               isActive={note.id === activeNoteId}
             />

@@ -1,4 +1,4 @@
-import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import type { Note } from "./note";
 import "./StickyNote.css";
 
@@ -12,14 +12,30 @@ interface StickyNoteProps {
   onChange: (text: string) => void;
   onMove: (x: number, y: number, pointer: Pointer) => void;
   onDragEnd: (pointer: Pointer | null) => void;
+  onResize: (width: number, height: number) => void;
   onActivate: () => void;
   isActive?: boolean;
 }
 
-function StickyNote({ note, onChange, onMove, onDragEnd, onActivate, isActive = false }: StickyNoteProps) {
+function StickyNote({ note, onChange, onMove, onDragEnd, onResize, onActivate, isActive = false }: StickyNoteProps) {
   const noteRef = useRef<HTMLDivElement>(null);
   const grabOffset = useRef<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const handleObservedResize = useEffectEvent((width: number, height: number) => {
+    if (width !== note.width || height !== note.height) onResize(width, height);
+  });
+
+  useEffect(() => {
+    const element = noteRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { inlineSize, blockSize } = entry.borderBoxSize[0];
+      handleObservedResize(Math.round(inlineSize), Math.round(blockSize));
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 || !noteRef.current) return;
