@@ -2,7 +2,20 @@
 
 A single-page sticky notes board built with React and TypeScript, with no UI component libraries. Notes can be placed at a chosen position and size, moved, resized, recoloured, edited and deleted, and they're saved in the browser between visits.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how the app is structured.
+**Live demo:** https://thebettertwin.github.io/sticky-notes/
+
+## Approach
+
+The app is split by feature, with the note rules (the reducer, storage, geometry and placement maths) kept in plain TypeScript modules that are unit tested, and thin React components on top. Interactions use browser features directly: pointer events for dragging, the native resize grip with `ResizeObserver`, and local storage for saving. [ARCHITECTURE.md](ARCHITECTURE.md) describes the structure, interaction design and performance choices in more detail.
+
+## Assumptions
+
+- **"Create a note of the specified size at the specified position"** means the user chooses both on the board: click to place a default-sized note, or press and drag to draw its size and position.
+- **"Change note size by dragging"** is met by the browser's built-in resize grip, with the new size written back to state so it's saved.
+- **"Without stock components"** rules out UI component libraries. An icon set (Phosphor Icons) is used only for the toolbar icons.
+- **Desktop first:** a mouse or trackpad is the main input. Pointer events mean touch should work for the basics, but it hasn't been tested.
+- **One user, one browser:** local storage is enough for saving, so there's no syncing between devices.
+- **The REST API bonus (V) was left out on purpose.** Saving goes through `loadNotes`/`saveNotes`, so an async API version could replace them without changing the components.
 
 ## Getting started
 
