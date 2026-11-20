@@ -1,28 +1,13 @@
 import { useEffect, useEffectEvent, useState, type CSSProperties, type PointerEvent } from "react";
 import type { Point } from "../core-ui/geometry";
-import { DEFAULT_NOTE_SIZE, MIN_NOTE_SIZE, type NoteRect } from "../sticky-note/note";
+import { DEFAULT_NOTE_SIZE, type NoteRect } from "../sticky-note/note";
+import { rectFromPoints } from "./rectFromPoints";
 import "./PlacementLayer.css";
-
-const DRAG_THRESHOLD = 4;
 
 interface PlacementLayerProps {
   colour: string;
   onPlace: (rect: NoteRect) => void;
   onCancel: () => void;
-}
-
-function rectFromPoints(start: Point, end: Point): NoteRect {
-  const width = Math.abs(end.x - start.x);
-  const height = Math.abs(end.y - start.y);
-  if (width < DRAG_THRESHOLD && height < DRAG_THRESHOLD) {
-    return { ...start, ...DEFAULT_NOTE_SIZE };
-  }
-  return {
-    x: Math.min(start.x, end.x),
-    y: Math.min(start.y, end.y),
-    width: Math.max(MIN_NOTE_SIZE, width),
-    height: Math.max(MIN_NOTE_SIZE, height),
-  };
 }
 
 function toBoardPoint(e: PointerEvent<HTMLElement>): Point {

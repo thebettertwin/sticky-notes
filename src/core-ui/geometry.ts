@@ -10,7 +10,9 @@ export interface ClientPoint {
   clientY: number;
 }
 
-export function isPointInRect({ clientX, clientY }: ClientPoint, rect: DOMRectReadOnly): boolean {
+export type ClientRect = Pick<DOMRectReadOnly, "left" | "top" | "right" | "bottom">;
+
+export function isPointInRect({ clientX, clientY }: ClientPoint, rect: ClientRect): boolean {
   return (
     clientX >= rect.left &&
     clientX <= rect.right &&
