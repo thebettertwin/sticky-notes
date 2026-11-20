@@ -13,7 +13,7 @@ function App() {
   const { trashRef, isOverTrash, isOver: isPointerOverTrash, trackPointer, stopTracking } =
     useTrashZone();
 
-  const [selectedColour, setSelectedColour] = useState(NOTE_COLOURS[0]);
+  const [selectedColour, setSelectedColour] = useState(NOTE_COLOURS[0].value);
   const [showColours, setShowColours] = useState(false);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
   const [isPlacing, setIsPlacing] = useState(false);
@@ -72,17 +72,24 @@ function App() {
     [updateNote, trackPointer],
   );
 
+  const handleDelete = useCallback(
+    (id: string) => {
+      removeNote(id);
+      setActiveNoteId((active) => (active === id ? null : active));
+    },
+    [removeNote],
+  );
+
   const handleDragEnd = useCallback(
     (id: string, pointer: ClientPoint | null) => {
       stopTracking();
       if (pointer && isPointerOverTrash(pointer)) {
-        removeNote(id);
-        setActiveNoteId((active) => (active === id ? null : active));
+        handleDelete(id);
       } else {
         bringToFront(id);
       }
     },
-    [stopTracking, isPointerOverTrash, removeNote, bringToFront],
+    [stopTracking, isPointerOverTrash, handleDelete, bringToFront],
   );
 
   const handleActivate = useCallback((note: Note) => {
@@ -92,7 +99,7 @@ function App() {
 
   return (
     <section id="center">
-      <h1>Sticky Notes</h1>
+      <h1>Notes</h1>
       <NotesBoard
         notes={notes}
         activeNoteId={activeNoteId}
@@ -103,6 +110,7 @@ function App() {
         onTextChange={handleTextChange}
         onMove={handleMove}
         onDragEnd={handleDragEnd}
+        onDelete={handleDelete}
         onResize={handleResize}
         onActivate={handleActivate}
       />

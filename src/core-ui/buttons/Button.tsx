@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import "./Button.css";
 
 interface ButtonProps extends ComponentProps<"button"> {
   variant?: "primary" | "secondary";

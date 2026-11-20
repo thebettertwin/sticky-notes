@@ -1,6 +1,15 @@
-import { memo, useEffect, useEffectEvent, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import {
+  memo,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import type { ClientPoint } from "../core-ui/geometry";
-import type { Note } from "./note";
+import { keepInsideBoard, type Note } from "./note";
 import "./StickyNote.css";
 
 // Callbacks take the note's id so the parent can pass one stable function to every note,
@@ -11,6 +20,7 @@ export interface StickyNoteHandlers {
   /** pointer is null when the drag was cancelled (e.g. by the browser or OS) */
   onDragEnd: (id: string, pointer: ClientPoint | null) => void;
   onResize: (id: string, width: number, height: number) => void;
+  onDelete: (id: string) => void;
   /** Called when the note is clicked, dragged or focused */
   onActivate: (note: Note) => void;
 }
@@ -27,6 +37,7 @@ function StickyNote({
   onMove,
   onDragEnd,
   onResize,
+  onDelete,
   onActivate,
 }: StickyNoteProps) {
   const noteRef = useRef<HTMLDivElement>(null);
@@ -62,8 +73,15 @@ function StickyNote({
     const board = noteRef.current?.offsetParent;
     if (!offset || !board) return;
     const boardRect = board.getBoundingClientRect();
-    const x = Math.max(0, e.clientX - boardRect.left - offset.x);
-    const y = Math.max(0, e.clientY - boardRect.top - offset.y);
+    const { x, y } = keepInsideBoard(
+      {
+        x: e.clientX - boardRect.left - offset.x,
+        y: e.clientY - boardRect.top - offset.y,
+        width: note.width,
+        height: note.height,
+      },
+      board.clientWidth,
+    );
     onMove(note.id, x, y, e);
   };
 
@@ -74,9 +92,27 @@ function StickyNote({
     onDragEnd(note.id, pointer);
   };
 
+  // Delete only when the note itself has focus, so it doesn't fire while typing in the text
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault();
+      onDelete(note.id);
+    }
+  };
+
+  // Escape leaves the text and focuses the note, so Delete is one key press away
+  const handleTextKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Escape") noteRef.current?.focus();
+  };
+
   return (
     <div
       ref={noteRef}
+      tabIndex={0}
+      role="group"
+      aria-label="Sticky note"
+      aria-keyshortcuts="Delete"
       className={["sticky-note", isDragging && "is-dragging", isActive && "is-active"]
         .filter(Boolean)
         .join(" ")}
@@ -85,11 +121,14 @@ function StickyNote({
           transform: `translate(${note.x}px, ${note.y}px)`,
           width: note.width,
           height: note.height,
+          // Stops the browser's resize grip from dragging the note past the board's right edge
+          maxWidth: `calc(100% - ${note.x}px)`,
           "--note-colour": note.colour,
         } as CSSProperties
       }
       onPointerDown={() => onActivate(note)}
       onFocus={() => onActivate(note)}
+      onKeyDown={handleKeyDown}
     >
       <div
         className="sticky-note__handle"
@@ -104,6 +143,7 @@ function StickyNote({
         placeholder="Write your note here..."
         value={note.text}
         onChange={(e) => onTextChange(note.id, e.target.value)}
+        onKeyDown={handleTextKeyDown}
         autoFocus={isActive}
       />
     </div>

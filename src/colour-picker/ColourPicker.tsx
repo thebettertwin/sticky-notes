@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react';
+import type { NoteColour } from '../sticky-note/noteColours';
 import './ColourPicker.css';
 
 interface ColourPickerProps {
-    swatches: string[];
+    swatches: readonly NoteColour[];
     selectedColour: string;
     onSelectColour: (colour: string) => void;
 }
@@ -10,15 +11,16 @@ interface ColourPickerProps {
 function ColourPicker({ swatches, selectedColour, onSelectColour }: ColourPickerProps) {
     return (
         <div className="colour-picker">
-            {swatches.map((colour) => (
+            {swatches.map(({ name, value }) => (
                 <button
-                    key={colour}
+                    key={value}
                     type="button"
-                    className={`colour-swatch${selectedColour === colour ? " selected" : ""}`}
-                    style={{ "--swatch-colour": colour } as CSSProperties}
-                    aria-pressed={selectedColour === colour}
-                    onClick={() => onSelectColour(colour)}
-                    aria-label={`Select colour ${colour}`}
+                    className={`colour-swatch${selectedColour === value ? " selected" : ""}`}
+                    style={{ "--swatch-colour": value } as CSSProperties}
+                    aria-pressed={selectedColour === value}
+                    onClick={() => onSelectColour(value)}
+                    aria-label={name}
+                    title={name}
                 />
             ))}
         </div>

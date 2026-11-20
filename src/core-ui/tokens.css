@@ -22,8 +22,14 @@
   --color-note-handle: rgba(0, 0, 0, 0.06);
   --color-note-focus: rgba(0, 0, 0, 0.2);
 
+  /* Colours: primary actions */
+  --color-primary: #f43f5e;
+  --color-primary-hover: color-mix(in oklab, var(--color-primary), black 15%);
+  --color-on-primary: #fff;
+
   /* Colours: toolbar and controls */
-  --color-surface: #f0f0f0;
+  /* 10% off the page background, darker in light mode and lighter in dark */
+  --color-surface: color-mix(in oklab, var(--color-bg), black 10%);
   --color-icon: #555;
   --color-hover-overlay: rgba(0, 0, 0, 0.06);
   --color-danger: #d32f2f;
@@ -76,5 +82,12 @@
     --color-accent: #c084fc;
     --color-accent-bg: rgba(192, 132, 252, 0.15);
     --color-accent-border: rgba(192, 132, 252, 0.5);
+
+    --color-surface: color-mix(in oklab, var(--color-bg), white 15%);
+    --color-icon: #d1d5db;
+    --color-hover-overlay: rgba(255, 255, 255, 0.08);
+    --color-danger: #f87171;
+    --color-danger-bg: rgba(248, 113, 113, 0.15);
+    --shadow-sm: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.4);
   }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useState, type CSSProperties, type PointerEvent } from "react";
 import type { Point } from "../core-ui/geometry";
-import { DEFAULT_NOTE_SIZE, type NoteRect } from "../sticky-note/note";
+import { DEFAULT_NOTE_SIZE, keepInsideBoard, type NoteRect } from "../sticky-note/note";
 import { rectFromPoints } from "./rectFromPoints";
 import "./PlacementLayer.css";
 
@@ -21,6 +21,8 @@ function toBoardPoint(e: PointerEvent<HTMLElement>): Point {
 function PlacementLayer({ colour, onPlace, onCancel }: PlacementLayerProps) {
   const [pointer, setPointer] = useState<Point | null>(null);
   const [dragStart, setDragStart] = useState<Point | null>(null);
+  // The layer covers the board, so its width is the board's width
+  const [boardWidth, setBoardWidth] = useState(0);
 
   const cancel = useEffectEvent(onCancel);
   useEffect(() => {
@@ -31,8 +33,14 @@ function PlacementLayer({ colour, onPlace, onCancel }: PlacementLayerProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const trackPointer = (e: PointerEvent<HTMLDivElement>) => {
+    setPointer(toBoardPoint(e));
+    setBoardWidth(e.currentTarget.clientWidth);
+  };
+
   const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
+    setBoardWidth(e.currentTarget.clientWidth);
     e.currentTarget.setPointerCapture(e.pointerId);
     const point = toBoardPoint(e);
     setDragStart(point);
@@ -42,18 +50,19 @@ function PlacementLayer({ colour, onPlace, onCancel }: PlacementLayerProps) {
   const handlePointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (!dragStart) return;
     setDragStart(null);
-    onPlace(rectFromPoints(dragStart, toBoardPoint(e)));
+    onPlace(keepInsideBoard(rectFromPoints(dragStart, toBoardPoint(e)), e.currentTarget.clientWidth));
   };
 
-  const ghost: NoteRect | null = dragStart && pointer
+  const unconstrainedGhost: NoteRect | null = dragStart && pointer
     ? rectFromPoints(dragStart, pointer)
     : pointer && { ...pointer, ...DEFAULT_NOTE_SIZE };
+  const ghost = unconstrainedGhost && keepInsideBoard(unconstrainedGhost, boardWidth);
 
   return (
     <div
       className="placement-layer"
       onPointerDown={handlePointerDown}
-      onPointerMove={(e) => setPointer(toBoardPoint(e))}
+      onPointerMove={trackPointer}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => setDragStart(null)}
       onPointerLeave={() => {

@@ -38,6 +38,7 @@ function NotesToolbar({
             onSelectColour={onSelectColour}
           />
           <IconButton
+            variant="secondary"
             className="toolbar-close"
             label="Close colour picker"
             icon={XIcon}
